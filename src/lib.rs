@@ -8,4 +8,5 @@ mod tests {
 }
 
 mod rooms;
-mod gmcp; 
+mod gmcp;
+mod msdp;

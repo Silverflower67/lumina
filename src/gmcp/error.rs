@@ -7,18 +7,19 @@ pub type Result<T> = std::result::Result<T,Error>;
 pub enum Error {
     Message(String),
     JSON(JSONError),
+    ExpectedSB,
     ExpectedSE,
     ExpectedGMCP
 }
 
 impl ser::Error for Error {
-    fn custom<T: Display>(msg:T) ->Self {
+    fn custom<T: Display>(msg:T) -> Self {
            Error::Message(msg.to_string())
        }
 }
 
 impl de::Error for Error {
-    fn custom<T: Display>(msg:T) ->Self {
+    fn custom<T: Display>(msg:T) -> Self {
            Error::Message(msg.to_string())
        }
 }
@@ -29,6 +30,7 @@ impl Display for Error {
                Error::Message(msg) => f.write_str(msg),
                Error::JSON(err) => err.fmt(f),
                Error::ExpectedGMCP => f.write_str("Expected valid GMCP data"),
+               Error::ExpectedSB => f.write_str("Expected IAC SB"),
                Error::ExpectedSE => f.write_str("Expected IAC SE")
            }
        }
