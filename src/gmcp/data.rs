@@ -19,7 +19,7 @@ impl<'a,T> DataStruct<T> where T: Serialize + Deserialize<'a> {
     }
     pub fn to_str(&self) -> Result<String> {
         let mut s = String::new();
-        s += &format!("{}.{} ", self.module, self.name);
+        s += &self.name;
         s += serde_json::to_string(&self.inner)
             .map_err(|err| Error::JSON(err))?
             .as_str();
@@ -27,12 +27,12 @@ impl<'a,T> DataStruct<T> where T: Serialize + Deserialize<'a> {
     }
     pub fn from_str(data: &'a String) -> Result<Self> {
         let index = data.find("{").ok_or(Error::ExpectedGMCP)?;
-        let name = &data[..index - 1].trim();
+        let name = &data[..index - 1].trim().clone();
         let index2 = &data[index..]
             .find("}")
             .ok_or(Error::Message("Expected end".to_string()))?;
         let inner: T =
             serde_json::from_str(&data[index..*index2]).map_err(|err| Error::JSON(err))?;
-        Ok(Self::new(inner,name))
+        Ok(Self::new(inner,name.to_owned().to_string()))
     }
 }
