@@ -1,3 +1,5 @@
+use std::ascii::AsciiExt;
+
 use super::error::{Error, Result};
 use bytes::{BufMut, BytesMut};
 use serde::{ser, Serialize};
@@ -30,7 +32,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     type SerializeTupleVariant = Self;
 
     fn serialize_bool(self, v: bool) -> Result<()> {
-        let b = if v { &b"true"[..] } else { &b"false"[..] };
+        let b = if v { &b"TRUE"[..] } else { &b"FALSE"[..] };
         self.output.put(b);
         Ok(())
     }
@@ -73,7 +75,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     }
 
     fn serialize_str(self, v: &str) -> Result<()> {
-        self.output.put(v.as_bytes());
+        self.output.put(v.to_ascii_uppercase().as_bytes());
         Ok(())
     }
 
