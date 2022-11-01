@@ -7,6 +7,6 @@ mod tests {
     }
 }
 
-mod rooms;
-mod gmcp;
-mod msdp;
+pub mod rooms;
+pub mod msdp;
+mod commands;

@@ -1,9 +1,9 @@
-use std::ascii::AsciiExt;
-
 use super::error::{Error, Result};
 use bytes::{BufMut, BytesMut};
 use serde::{ser, Serialize};
 
+
+/// Convert a value of type `T` to a MSDP-ready [`Vec<u8>`] (doesn't include IACs)
 pub fn to_vec<T>(value: &T) -> Result<Vec<u8>>
 where
     T: Serialize,
@@ -15,6 +15,8 @@ where
     Ok(serializer.output.to_vec())
 }
 
+/// An [MSDP](https://mudhalla.net/tintin/protocols/msdp/) `serde` serializer.<br/>
+/// It's not recommended to use this struct directly; use [`to_vec`] instead
 pub struct Serializer {
     output: BytesMut,
 }
@@ -75,7 +77,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     }
 
     fn serialize_str(self, v: &str) -> Result<()> {
-        self.output.put(v.to_ascii_uppercase().as_bytes());
+        self.output.put(v.as_bytes());
         Ok(())
     }
 
@@ -103,7 +105,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         value.serialize(self)
     }
     fn serialize_unit(self) -> Result<()> {
-        self.output.put(&b"null"[..]);
+        self.output.put(&b"NULL"[..]);
         Ok(())
     }
 
@@ -263,7 +265,11 @@ impl<'a> ser::SerializeMap for &'a mut Serializer {
         T: Serialize,
     {
         self.output.put_u8(1);
-        key.serialize(&mut **self)
+        let mut temp_ser = Serializer {output: BytesMut::new()};
+        key.serialize(&mut temp_ser)?;
+        let up = temp_ser.output.to_ascii_uppercase();
+        self.output.put(&up[..]);
+        Ok(())
     }
 
     fn serialize_value<T: ?Sized>(&mut self, value: &T) -> Result<()>
@@ -289,7 +295,10 @@ impl<'a> ser::SerializeStruct for &'a mut Serializer {
         T: Serialize,
     {
         self.output.put_u8(1);
-        key.serialize(&mut **self)?;
+        let mut temp_ser = Serializer {output: BytesMut::new()};
+        key.serialize(&mut temp_ser)?;
+        let up = temp_ser.output.to_ascii_uppercase();
+        self.output.put(&up[..]);
         self.output.put_u8(2);
         value.serialize(&mut **self)
     }
@@ -307,7 +316,10 @@ impl<'a> ser::SerializeStructVariant for &'a mut Serializer {
     where
         T: Serialize,
     {
-        key.serialize(&mut **self)?;
+        let mut temp_ser = Serializer {output: BytesMut::new()};
+        key.serialize(&mut temp_ser)?;
+        let up = temp_ser.output.to_ascii_uppercase();
+        self.output.put(&up[..]);
         value.serialize(&mut **self)
     }
     fn end(self) -> Result<()> {
